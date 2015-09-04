@@ -39,8 +39,9 @@ translate_line() {
   # after redirect (get both sets of headers) use last version of encoding:
   encoding=$(cat "$TMP" | grep -o -E 'charset=[^"]+' | tail -n1 | cut -d'=' -f2)
 
-  ans=$(cat "$TMP" | iconv -f $encoding | grep -o -E 'class="t0">.*?</div>' | cut -c12- ); 
-  echo "${ans%</div>}"
+  # extract from HTML, decode HTML entities
+  ans=$(cat "$TMP" | iconv -f $encoding | grep -o -E 'class="t0">.*?</div>' | cut -c12- );
+  echo "${ans%</div>}" | perl -MHTML::Entities -ne 'print decode_entities($_)'
 }
 
 # Use stdin as input, if no cmd-line args are given. Limit to 10KB.
