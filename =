@@ -1,0 +1,5 @@
+#!/usr/bin/python
+from __future__ import print_function, division
+import sys
+if len(sys.argv) > 1:
+  print(eval(' '.join(sys.argv[1:])))
