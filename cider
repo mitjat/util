@@ -1,0 +1,8 @@
+#!/bin/bash
+
+full_name=`g4 info | grep 'Client name: '`
+echo $full_name | grep  '.*:.*:.*:.*:citc' >/dev/null || { echo "not in a cloud client"; exit 1; }
+client=${full_name#*:*:}
+client=${client%%:*}
+
+google-chrome --new-window --app="http://cider-staging/${client}" 
