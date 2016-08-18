@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Opens current CITC client in Cider
+
 full_name=`g4 info | grep 'Client name: '`
 echo $full_name | grep  '.*:.*:.*:.*:citc' >/dev/null || { echo "not in a cloud client"; exit 1; }
 client=${full_name#*:*:}
