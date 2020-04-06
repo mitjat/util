@@ -40,8 +40,8 @@ translate_line() {
   encoding=$(cat "$TMP" | grep -o -E 'charset=[^"]+' | tail -n1 | cut -d'=' -f2)
 
   # extract from HTML, decode HTML entities
-  ans=$(cat "$TMP" | iconv -f $encoding | grep -o -E 'class="t0">.*?</div>' | cut -c12- );
-  echo "${ans%</div>}" | perl -MHTML::Entities -ne 'print decode_entities($_)'
+  ans=$(cat "$TMP" | iconv -f $encoding | grep -o -P 'class="t0">.*?</div>' | cut -c12- );
+  echo "$ans" | rev | cut -c9- | rev | perl -MHTML::Entities -ne 'print decode_entities($_)'
 }
 
 # Use stdin as input, if no cmd-line args are given. Limit to 10KB.
