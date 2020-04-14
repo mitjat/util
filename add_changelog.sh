@@ -5,8 +5,17 @@
 #  - Creates a .changelog/... file
 #  - Adds it to a new commit
 #  - Pushes the commit to origin
+#
+# Usage: add_changelog.sh [--strict]
+#
+# If --strict is given, will exit with non-zero status if repo seems ot not use the changelog.
 
 set -euo pipefail
+
+if ! [[ -d .changelog ]]; then
+  echo "There is no .changelog dir; assuming this repo does not use changelogs. Exiting."
+  if [[ "$flags" == "--strict" ]]; then exit 1; else exit 0; fi
+fi
 
 # Determine PR number
 branch="$(git rev-parse --abbrev-ref HEAD)"
