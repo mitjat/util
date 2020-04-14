@@ -27,7 +27,7 @@ git fetch --prune
 } >/tmp/branches_to_delete
 
 vi /tmp/branches_to_delete
-local_to_delete="$(cat /tmp/branches_to_delete | sed -s 's/#.*//g' | tr '\n' ' ' | sed -E 's/\s+/ /g')"
+local_to_delete="$(cat /tmp/branches_to_delete | sed -s 's/#.*//g' | tr '\n' ' ' | sed -E 's/\s+/ /g; s/^ *//g; s/ *$//g;')"
 
 # Find all branches on origin that belong to $USER, but we have no
 # equivalent branch locally (or WILL not have, after deletions of local branches).
