@@ -47,7 +47,10 @@ def local_cleanup(pr: PullRequest):
     if github_sha == local_sha:
         print(
             f"Branch points to {local_sha} both on GitHub and locally. Deleting local branch.")
-        os.system(f"git branch -D {branch}")
+        os.system(
+            f"[[ $(git rev-parse --abbrev-ref HEAD) == {branch} ]] && git checkout master; git branch -D {branch}")
+        # We deleted the branch locally, GitHub did it remotely. Lastly, remove tracking branch.
+        os.system("git fetch --prune")
     else:
         print(
             f"Branch points to {local_sha} locally but to {github_sha} on GitHub. Renaming local branch to BACKUP_{branch} just in case.")
@@ -89,12 +92,18 @@ if __name__ == '__main__':
             else:
                 print("New master cannot be automatically merged into branch, or there is another reason branch is unmeregeable. Aborting.")
                 break
-        try:
-            print(pr.merge(merge_method='squash', commit_message=pr.body))
-            print("PR merged!")
-            local_cleanup(pr)
-            break
-        except Exception as e:
-            print(
-                f"Cannot merge (yet?): {e.args[1]['message']} | Status: {ci_status} {pr.mergeable_state}")
+
+        if pr.mergeable_state == 'clean':
+            try:
+                print(
+                    f"STATUS IS GOOD! Submitting. Status: {ci_status} {pr.mergeable_state}")
+                print(pr.merge(merge_method='squash',
+                               commit_message=(pr.body or '')))
+                print("PR merged!")
+                local_cleanup(pr)
+                break
+            except Exception as e:
+                print(
+                    f"Cannot merge (yet?): {e.args[1]['message']} | Status: {ci_status} {pr.mergeable_state}")
+        print(f"Status: {ci_status} {pr.mergeable_state}")
         time.sleep(5*60)  # seconds
