@@ -14,7 +14,7 @@ set -euo pipefail
 
 if ! [[ -d .changelog ]]; then
   echo "There is no .changelog dir; assuming this repo does not use changelogs. Exiting."
-  if [[ "$flags" == "--strict" ]]; then exit 1; else exit 0; fi
+  if [[ "$*" == "--strict" ]]; then exit 1; else exit 0; fi
 fi
 
 # Determine PR number
