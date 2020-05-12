@@ -48,7 +48,7 @@ def local_cleanup(pr: PullRequest):
         print(
             f"Branch points to {local_sha} both on GitHub and locally. Deleting local branch.")
         os.system(
-            f"[[ $(git rev-parse --abbrev-ref HEAD) == {branch} ]] && git checkout master; git branch -D {branch}")
+            f"[ $(git rev-parse --abbrev-ref HEAD) -eq {branch} ] && git checkout master; git branch -D {branch}")
         # We deleted the branch locally, GitHub did it remotely. Lastly, remove tracking branch.
         os.system("git fetch --prune")
     else:
