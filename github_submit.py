@@ -48,13 +48,13 @@ def local_cleanup(pr: PullRequest):
         print(
             f"Branch points to {local_sha} both on GitHub and locally. Deleting local branch.")
         os.system(
-            f"[ $(git rev-parse --abbrev-ref HEAD) -eq {branch} ] && git checkout master; git branch -D {branch}")
-        # We deleted the branch locally, GitHub did it remotely. Lastly, remove tracking branch.
-        os.system("git fetch --prune")
+            f"[ $(git rev-parse --abbrev-ref HEAD) == {branch} ] && git checkout master; git branch -D {branch}")
     else:
         print(
             f"Branch points to {local_sha} locally but to {github_sha} on GitHub. Renaming local branch to BACKUP_{branch} just in case.")
         os.system(f"git branch -m {branch} BACKUP_{branch}")
+    # We deleted/renamed the branch locally, GitHub did it remotely. Lastly, remove tracking branch.
+    os.system("git fetch --prune")
 
 
 if __name__ == '__main__':
