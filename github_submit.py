@@ -16,6 +16,9 @@ def get_stdout(cmd: str) -> str:
 
 
 def parse_origin() -> (str, str):
+    """
+    Returns (GH username, GH repo name) of the repo in current working directory.
+    """
     origin = get_stdout('git remote get-url origin')
     m = re.search(r'github.com.*?([\w_-]+)/([\w_-]+)(?:.git)?', origin)
     if m is None:
@@ -38,7 +41,12 @@ def connect_to_github() -> Github:
     return Github(open(token_path).read().strip())
 
 
-def local_cleanup(pr: PullRequest):
+def local_cleanup(pr: PullRequest, upstream: str):
+    """
+    Assuming `pr` has been submitted, either:
+     - deletes the corresponding local branch if the remote has the same SHA
+     - renames the corresponding local branch from `foo` to `BACKUP_foo` otherwise.
+    """
     branch = pr.head.ref
     print(
         f"Branch {branch} has been merged as PR #{pr.number}; cleaning up locally.")
@@ -48,7 +56,7 @@ def local_cleanup(pr: PullRequest):
         print(
             f"Branch points to {local_sha} both on GitHub and locally. Deleting local branch.")
         os.system(
-            f"[ $(git rev-parse --abbrev-ref HEAD) == {branch} ] && git checkout master; git branch -D {branch}")
+            f"[ \"$(git rev-parse --abbrev-ref HEAD)\" = \"{branch}\" ] && git checkout {upstream}; git branch -D {branch}")
     else:
         print(
             f"Branch points to {local_sha} locally but to {github_sha} on GitHub. Renaming local branch to BACKUP_{branch} just in case.")
@@ -65,6 +73,8 @@ if __name__ == '__main__':
 
     gh = connect_to_github()
     repo = gh.get_repo("%s/%s" % parse_origin())
+    upstream = 'dev' if os.system(
+        "git rev-parse dev >/dev/null 2>&1") == 0 else 'master'
 
     while True:
         pr = repo.get_pull(args.pr)
@@ -72,25 +82,27 @@ if __name__ == '__main__':
               f'  [PR #{pr.number}: {ellipsis(pr.title, 40)}]    ', end='')
         if pr.is_merged():
             print(f"PR is already merged!")
-            local_cleanup(pr)
+            local_cleanup(pr, upstream)
             break
         ci_status = repo.get_commit(
             sha=pr.head.sha).get_combined_status().state
 
-        is_behind_master = pr.mergeable_state == 'behind'
+        is_behind_upstream = pr.mergeable_state == 'behind'
         if pr.mergeable_state == 'unknown':
-            print('Mergeable state is "unknown". This can sometimes be resolved by trying to sync to master. Attempting that now.')
-            is_behind_master = True
-        if is_behind_master:
-            print(f"PR is behind master. Trying to merge master into branch.")
+            print('Mergeable state is "unknown". This can sometimes be resolved by trying to sync to upstream. Attempting that now.')
+            is_behind_upstream = True
+        if is_behind_upstream:
+            print(
+                f"PR is behind upstream (${upstream}). Trying to merge ${upstream} into branch.")
             if pr.update_branch():
                 print(
-                    "Branch updated (= master was merged into it) on GitHub (but not locally!). Retrying to merge PR.")
+                    "Branch updated (= upstream was merged into it) on GitHub (but not locally!). Retrying to merge PR.")
                 # GitHub backend is eventually-consistent; give it some time to catch up
                 time.sleep(30)
                 continue
             else:
-                print("New master cannot be automatically merged into branch, or there is another reason branch is unmeregeable. Aborting.")
+                print(
+                    f"New ${upstream} cannot be automatically merged into branch, or there is another reason branch is unmeregeable. Aborting.")
                 break
 
         if pr.mergeable_state == 'clean':
@@ -100,7 +112,7 @@ if __name__ == '__main__':
                 print(pr.merge(merge_method='squash',
                                commit_message=(pr.body or '')))
                 print("PR merged!")
-                local_cleanup(pr)
+                local_cleanup(pr, upstream)
                 break
             except Exception as e:
                 print(
