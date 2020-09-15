@@ -11,7 +11,7 @@ if [[ "$pr" != "" ]]; then
 else
   git push --set-upstream origin $(git branch-name)
   hub pull-request -e
-  add_changelog.sh
+  #add_changelog.sh
 fi
 
 # Open PR in browser
