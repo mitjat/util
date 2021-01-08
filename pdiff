@@ -4,7 +4,7 @@
 #
 # pdiff applies an aribtrary bash command/transformation to two input files, then diffs
 # the results. For example, to diff two .py files, but looking at roughly only comments:
-#   pdiff 'grep #' one.py two.py
+#   pdiff 'grep "#"' one.py two.py
 
 
 set -euo pipefail
@@ -18,10 +18,10 @@ left="$2"
 right="$3"
 gitOpts="${4:-}"
 
+runCmd() { eval "$cmd" || true; }
 processedLeft=$(mktemp /tmp/pdiff.$(echo "$left" | slugify).XXXX)
-cat "$left" | $cmd > "$processedLeft"
+cat "$left" | runCmd > "$processedLeft"
 processedRight=$(mktemp /tmp/pdiff.$(echo "$right" | slugify).XXXX)
-cat "$right" | $cmd > "$processedRight"
-
+cat "$right" | runCmd > "$processedRight"
 echo "Diffing $processedLeft and $processedRight"
 git diff $gitOpts "$processedLeft" "$processedRight"
