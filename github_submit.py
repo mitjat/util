@@ -73,11 +73,10 @@ if __name__ == '__main__':
 
     gh = connect_to_github()
     repo = gh.get_repo("%s/%s" % parse_origin())
-    upstream = 'dev' if os.system(
-        "git rev-parse dev >/dev/null 2>&1") == 0 else 'master'
 
     while True:
         pr = repo.get_pull(args.pr)
+        upstream = pr.base.ref
         print(time.strftime(r'%y-%m-%d %H:%M') +
               f'  [PR #{pr.number}: {ellipsis(pr.title, 40)}]    ', end='')
         if pr.is_merged():
