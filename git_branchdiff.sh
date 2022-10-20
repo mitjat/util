@@ -14,4 +14,4 @@ else
   args="${@:1:$#-1}"  # all args but the last one
 fi
 
-git diff $args $(git merge-base $br master) $br
+git diff $args $(git merge-base $br $(git master-branch)) $br

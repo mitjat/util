@@ -19,6 +19,11 @@ git fetch --prune
   gone="$(git gone)"
   if [[ "$gone" == "" ]]; then echo "# (none)"; else echo "$gone"; fi
   echo
+  echo "### Branches that have been merged into main"
+  for br in $(git log | sed -En "s/Merge branch '(.*)' into 'main'/\1/p" | tr -d ' '); do
+    git br | grep --quiet -w $br && echo $br
+  done
+  echo
   echo "### Active (!) $USER branches, by age:"
   git for-each-ref \
     --sort committerdate \
