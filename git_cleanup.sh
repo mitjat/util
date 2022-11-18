@@ -20,7 +20,10 @@ git fetch --prune
   if [[ "$gone" == "" ]]; then echo "# (none)"; else echo "$gone"; fi
   echo
   echo "### Branches that have been merged into main"
-  for br in $(git log | sed -En "s/Merge branch '(.*)' into 'main'/\1/p" | tr -d ' '); do
+  for br in $(
+	  git log | sed -En "s/Merge branch '(.*)' into 'main'/\1/p" | tr -d ' ';  # gitlab format
+	  git log main | sed -En 's/Merge pull request #.+ from [^\/]+?\/(.*)/\1/p' | tr -d ' ';  # github format
+  ); do
     git br | grep --quiet -w $br && echo $br
   done
   echo
