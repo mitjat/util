@@ -12,6 +12,8 @@ set_sub() {
 # does not exist any more.
 git fetch --prune
 
+main="$(git master-branch)"
+
 {
   echo "### Uncomment the branches that should be removed"
   echo
@@ -19,10 +21,10 @@ git fetch --prune
   gone="$(git gone)"
   if [[ "$gone" == "" ]]; then echo "# (none)"; else echo "$gone"; fi
   echo
-  echo "### Branches that have been merged into main"
+  echo "### Branches that have been merged into $main"
   for br in $(
-	  git log | sed -En "s/Merge branch '(.*)' into 'main'/\1/p" | tr -d ' ';  # gitlab format
-	  git log main | sed -En 's/Merge pull request #.+ from [^\/]+?\/(.*)/\1/p' | tr -d ' ';  # github format
+	  git log "$main" | sed -En "s/Merge branch '(.*)' into '$main'/\1/p" | tr -d ' ';  # gitlab format
+	  git log "$main" | sed -En 's/Merge pull request #.+ from [^\/]+?\/(.*)/\1/p' | tr -d ' ';  # github format
   ); do
     git br | grep --quiet -w $br && echo $br
   done
@@ -39,8 +41,8 @@ local_to_delete="$(cat /tmp/branches_to_delete | sed -s 's/#.*//g' | tr '\n' ' '
 
 # Find all branches on origin that belong to $USER, but we have no
 # equivalent branch locally (or WILL not have, after deletions of local branches).
-remote="$(git br -r | grep -v BACKUP | grep $USER | sed "s/^.*$USER/$USER/g")"
-local="$(git br | grep -v BACKUP | grep $USER | sed "s/^.*$USER/$USER/g")"
+remote="$(git br -r | grep -v BACKUP | grep -E "^ *origin/$USER" | sed "s/^.*$USER/$USER/g")"
+local="$(git br | grep -v BACKUP | grep -E "^ *$USER" | sed "s/^.*$USER/$USER/g")"
 local="$(set_sub "$local" "$local_to_delete")"
 remote_to_delete="$(set_sub "$remote" "$local")"
 
