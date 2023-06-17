@@ -26,7 +26,7 @@ main="$(git master-branch)"
 	  git log "$main" | sed -En "s/Merge branch '(.*)' into '$main'/\1/p" | tr -d ' ';  # gitlab format
 	  git log "$main" | sed -En 's/Merge pull request #.+ from [^\/]+?\/(.*)/\1/p' | tr -d ' ';  # github format
   ); do
-    git br | grep --quiet -w $br && echo $br
+    [[ "$(git br --list $br)" != "" ]] && echo $br
   done
   echo
   echo "### Active (!) $USER branches, by age:"
@@ -41,10 +41,13 @@ local_to_delete="$(cat /tmp/branches_to_delete | sed -s 's/#.*//g' | tr '\n' ' '
 
 # Find all branches on origin that belong to $USER, but we have no
 # equivalent branch locally (or WILL not have, after deletions of local branches).
-remote="$(git br -r | grep -v BACKUP | grep -E "^ *origin/$USER" | sed "s/^.*$USER/$USER/g")"
-local="$(git br | grep -v BACKUP | grep -E "^ *$USER" | sed "s/^.*$USER/$USER/g")"
-local="$(set_sub "$local" "$local_to_delete")"
-remote_to_delete="$(set_sub "$remote" "$local")"
+remote="$(git br --remotes --list "origin/$USER/*" | tr $'*\n' ' ' | sed -E 's!\borigin/!!g')"
+current_local="$(git br --list "$USER/*" | tr $'*\n' ' ')"
+future_local="$(set_sub "$current_local" "$local_to_delete")"
+#echo "remote:        $remote"
+#echo "current local: $current_local"
+#echo "future local:  $future_local"
+remote_to_delete="$(set_sub "$remote" "$future_local")"
 
 if [[ "${local_to_delete}${remote_to_delete}" == "" ]]; then
   echo "All caught up!"
