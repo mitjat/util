@@ -47,7 +47,7 @@ else
   # git diff
   sed -i 's/delta --light/delta --dark/g' ~/.gitconfig
   # vscode
-  set_vscode_theme "Default Dark"
+  set_vscode_theme "Visual Studio Dark"
   # mousepad
   gsettings set org.xfce.mousepad.preferences.view color-scheme 'xubuntu_dark'
 fi
