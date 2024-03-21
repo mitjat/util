@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Adjust the bightness of the attached HDMI display.
+
+cmd="ddcutil setvcp 10 $1"  # 10 is the opcode for brightness
+
+if ! [[ -w /dev/i2c-0 ]]; then
+  echo "
+NOTE: ddcutil needs access to /dev/i2c-*, which is by default only allowed to root and the i2c group.
+To add the current user:
+  sudo usermod $USER -aG i2c
+(and log out of the X session or restart the computer)
+
+For now, executing the command with sudo.
+  "
+  sudo $cmd
+else
+  $cmd
+fi
+
